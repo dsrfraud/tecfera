@@ -1,0 +1,24 @@
+# Node modules
+node_modules/
+
+# Python environments
+venv/
+*.pyc
+
+# Mac system files
+.DS_Store
+
+# Logs
+*.log
+
+# VSCode settings
+.vscode/
+
+# Conda environment
+.env/
+conda-meta/
+
+
+*.whl
+.env
+model_weights/
