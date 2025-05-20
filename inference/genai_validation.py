@@ -1,7 +1,11 @@
 import openai
+import os
+from dotenv import load_dotenv
+from fastapi import HTTPException
 
-OPENAI_API_KEY = os.getenv("OPEN_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+openai.api_key = OPENAI_API_KEY
 
 def extract_passport_front_data(front_ocr_text, mrz_text):
     """

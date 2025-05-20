@@ -8,6 +8,7 @@ import numpy as np
 import qreader
 import requests
 import tldextract
+import whois  # Added Python whois library
 from PIL import Image
 from PyPDF2 import PdfReader
 from pdf2image import convert_from_bytes
@@ -60,6 +61,7 @@ class QRDocumentProcessor:
     def get_domain_info(self, url: str) -> Dict:
         """
         Get domain information using the API Layer service.
+        If API Layer fails, fall back to Python whois library.
         
         Args:
             url: URL to extract domain from and analyze
@@ -68,17 +70,47 @@ class QRDocumentProcessor:
             Dictionary with domain information
         """
         main_domain = self._extract_main_domain(url)
-        api_url = f"https://api.apilayer.com/whois/query?domain={main_domain}"
         
+        # First try using API Layer
+        api_url = f"https://api.apilayer.com/whois/query?domain={main_domain}"
         headers = {"apikey": self.api_key}
         
         try:
             response = requests.get(api_url, headers=headers, timeout=10)
             if response.status_code == 200:
                 return response.json()
-            return {"error": f"API error: {response.status_code}"}
-        except Exception as e:
-            return {"error": f"Request failed: {str(e)}"}
+        except Exception as api_error:
+            # Log the API error if needed
+            pass
+            
+        # If API Layer failed, fall back to Python whois
+        try:
+            w = whois.whois(main_domain)
+            
+            # Convert whois response to a structure similar to API Layer's
+            # for consistency in downstream processing
+            result = {
+                "result": {
+                    "domain_name": w.domain_name if hasattr(w, 'domain_name') else main_domain,
+                    "registrar": w.registrar if hasattr(w, 'registrar') else None,
+                    "creation_date": w.creation_date if hasattr(w, 'creation_date') else None,
+                    "updated_date": w.updated_date if hasattr(w, 'updated_date') else None,
+                    "expiration_date": w.expiration_date if hasattr(w, 'expiration_date') else None,
+                    "name_servers": w.name_servers if hasattr(w, 'name_servers') else None,
+                    "status": w.status if hasattr(w, 'status') else None,
+                    "emails": w.emails if hasattr(w, 'emails') else None,
+                    "dnssec": w.dnssec if hasattr(w, 'dnssec') else None,
+                    "whois_server": w.whois_server if hasattr(w, 'whois_server') else None,
+                    "source": "python-whois"  # Indicate this came from fallback source
+                }
+            }
+            return result
+        except Exception as whois_error:
+            # Both methods failed
+            return {
+                "error": f"Domain info retrieval failed. API error followed by WHOIS error.",
+                "domain": main_domain
+            }
     
     def _extract_main_domain(self, url: str) -> str:
         """Extract the main domain from a URL."""
@@ -96,16 +128,19 @@ class QRDocumentProcessor:
             Tuple of (forgery_status, qr_values)
         """
         try:
-            if qr_data and isinstance(qr_data, dict) and 'result' in qr_data and 'domain_name' in qr_data['result']:
-                domain = qr_data['result']["domain_name"]
-                if isinstance(domain, list):
-                    domain = domain[0]
-                
-                # Check if domain is in trusted domains list
-                is_trusted = any(trusted in domain for trusted in self.trusted_domains)
-                forgery_status = "not forged" if is_trusted else "forged"
-                return forgery_status, [qr_data]
-        except Exception:
+            if qr_data and isinstance(qr_data, dict):
+                # Handle both API Layer response and python-whois fallback response
+                if 'result' in qr_data and 'domain_name' in qr_data['result']:
+                    domain = qr_data['result']["domain_name"]
+                    if isinstance(domain, list):
+                        domain = domain[0]
+                    
+                    # Check if domain is in trusted domains list
+                    is_trusted = any(trusted in domain.lower() for trusted in self.trusted_domains)
+                    forgery_status = "not forged" if is_trusted else "forged"
+                    return forgery_status, [qr_data]
+        except Exception as e:
+            # Log the error if needed
             pass
             
         return "not applicable", [qr_data] if qr_data else []

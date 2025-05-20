@@ -8,8 +8,8 @@ load_dotenv()
 # from inference.yolo_manager import YoloModelManager
 # yolo_manager = YoloModelManager() 
 
-# from routers import forgery, passport_verification, face_match
-from routers import face_match
+from routers import forgery, passport_verification, face_match, sign_match
+# from routers import face_match
 
 # FastAPI application instance
 app = FastAPI(
@@ -29,17 +29,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(
-#     forgery.router,
-#     prefix="",
-#     tags=["Forgery Detection & QR Processing"]
-# )
+app.include_router(
+    forgery.router,
+    prefix="",
+    tags=["Forgery Detection & QR Processing"]
+)
 
-# app.include_router(
-#     passport_verification.router,
-#     prefix="",
-#     tags=["Passport Data Extraction & Validation"]
-# )
+app.include_router(
+    passport_verification.router,
+    prefix="",
+    tags=["Passport Data Extraction & Validation"]
+)
 
 app.include_router(
     face_match.router,
@@ -47,11 +47,11 @@ app.include_router(
     tags=['Face Matching']
 )
 
-# app.include_router(
-#     sign_match.router,
-#     prefix="",
-#     tags=['Signature Matching']
-# )
+app.include_router(
+    sign_match.router,
+    prefix="",
+    tags=['Signature Matching']
+)
 
 
 # Run the FastAPI application
