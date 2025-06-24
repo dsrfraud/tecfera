@@ -21,7 +21,7 @@ class QRDocumentProcessor:
     if they're potentially forged based on domain information.
     """
     
-    def __init__(self, api_key: str = "pWlQYx9XMaP3400OhIdJwququbOeel63", trusted_domains: List[str] = ["gov.in"]):
+    def __init__(self, api_key: str = "pWlQYx9XMaP3400OhIdJwququbOeel63", trusted_domains: List[str] = ["gov.in", "nic.in"]):
         """
         Initialize the QR code processor with API key and trusted domains.
         
@@ -69,10 +69,13 @@ class QRDocumentProcessor:
         Returns:
             Dictionary with domain information
         """
+        print(f'Processing URL: {url}')
         main_domain = self._extract_main_domain(url)
+        print(f'Extracted main domain: {main_domain}')
         
         # First try using API Layer
         api_url = f"https://api.apilayer.com/whois/query?domain={main_domain}"
+        print(f'API URL: {api_url}')
         headers = {"apikey": self.api_key}
         
         try:
