@@ -7,7 +7,7 @@ import openai
 import re
 import json
 
-
+import os
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
