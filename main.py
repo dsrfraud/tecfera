@@ -11,7 +11,9 @@ load_dotenv()
 from routers import forgery, passport_verification, face_match, sign_match, face_search
 from routers import bank_statement
 from routers import face_match
+from routers import deep_fake
 from routers import forgery
+from routers import speech
 # FastAPI application instance
 app = FastAPI(
     title="Tecfera Backend Service",
@@ -67,6 +69,18 @@ app.include_router(
     tags=['Signature Matching']
 )
 
+
+app.include_router(
+    deep_fake.router,
+    prefix="",
+    tags=['Deep Fake Detection']
+)
+
+app.include_router(
+    speech.router,
+    prefix="",
+    tags=['Speech Diarization']
+)
 
 # Run the FastAPI application
 if __name__ == "__main__":
