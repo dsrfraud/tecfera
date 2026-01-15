@@ -16,7 +16,7 @@ from routers import forgery
 from routers import speech
 # FastAPI application instance
 app = FastAPI(
-    title="Tecfera Backend Service",
+    title="Tecfera Backend - Service",
     description="Backend APIs for Tecfera document processing and verification",
     contact={
         "name": "Tecfera Solutions",
